@@ -138,7 +138,13 @@
       <button class="tab-btn" data-tab="admin">RA Terminal</button>
     </div>
 
-    <section id="view-bounties" class="view-section active"><div class="grid" id="bounty-grid"></div></section>
+    <section id="view-bounties" class="view-section active">
+      <div style="background: rgba(255, 209, 102, 0.1); border-left: 4px solid var(--accent-gold); padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
+        <p style="color: var(--accent-gold); font-size: 0.9rem; margin: 0;"><strong>⚠️ Guild Directive:</strong> To receive credit, you must show or send photo evidence of your completed mission to Alec before your claim will be approved.</p>
+      </div>
+      
+      <div class="grid" id="bounty-grid"></div>
+    </section>
     <section id="view-store" class="view-section"><div class="grid" id="store-grid"></div></section>
     <section id="view-roster" class="view-section">
       <table>
@@ -306,9 +312,15 @@
     }
 
     // Action Handlers
-    async function handleClaim(bountyId, bountyTitle) {
+   async function handleClaim(bountyId, bountyTitle) {
       if (!localUserId) return showModal();
-      await postData({ action: 'claim_bounty', residentId: localUserId, pin: localUserPin, bountyId }, "Filing Mission Log...");
+      
+      const res = await postData({ action: 'claim_bounty', residentId: localUserId, pin: localUserPin, bountyId }, "Filing Mission Log...");
+      
+      // If the claim was successful, show the evidence reminder
+      if (res) {
+        alert(`Claim logged for: "${bountyTitle}"\n\n📸 REQUIRED: You must show or send a photo of your completed mission to the RA before the credits will be approved!`);
+      }
     }
 
     async function handlePurchase(itemId, itemName) {
