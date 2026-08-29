@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Budge Hall | Space Fleet Terminal</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-bg: #141c2e;
+      --card-border: #22324f;
+      --accent-cyan: #00f0ff;
+      --accent-gold: #ffd166;
+      --accent-purple: #9d4edd;
+      --text-main: #f0f4f8;
+      --text-muted: #8899ac;
+      --success: #06d6a0;
+      --danger: #ef476f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); padding: 20px 16px; line-height: 1.5; }
+    .container { max-width: 950px; margin: 0 auto; }
+    
+    header { text-align: center; margin-bottom: 24px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; }
+    header h1 { color: var(--accent-cyan); font-size: 1.8rem; letter-spacing: 1.5px; text-transform: uppercase; }
+    header p { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* User Strip & Vault */
+    .user-strip { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .user-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .user-rank { color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; }
+    .user-credits { background: rgba(255, 209, 102, 0.15); color: var(--accent-gold); padding: 4px 10px; border-radius: 6px; font-weight: bold; }
+    
+    .vault-container { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 16px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px; }
+    .vault-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.9rem; flex-wrap: wrap; gap: 12px; }
+    .vault-donate-ui { display: flex; gap: 8px; align-items: center; }
+    .vault-donate-ui input { width: 70px; padding: 6px; border-radius: 4px; border: 1px solid var(--card-border); background: #080b12; color: #fff; text-align: center; }
+    .progress-bar-bg { background: #080b12; border-radius: 12px; height: 18px; width: 100%; overflow: hidden; border: 1px solid var(--card-border); }
+    .progress-fill { background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan)); height: 100%; width: 0%; transition: width 0.4s ease; }
+
+    /* Navigation & Grid */
+    .tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab-btn { background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--card-border); padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s ease; }
+    .tab-btn.active, .tab-btn:hover { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+
+    /* Cards */
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; }
+    .card h3 { font-size: 1.1rem; margin-bottom: 6px; color: var(--accent-gold); }
+    .card p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; width: fit-content; }
+    .badge-cyan { background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); }
+    .badge-gold { background: rgba(255, 209, 102, 0.15); color: var(--accent-gold); }
+    .badge-purple { background: rgba(157, 78, 221, 0.2); color: var(--accent-purple); }
+    .badge-pending { background: rgba(255, 209, 102, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); }
+    .badge-success { background: rgba(6, 214, 160, 0.15); color: var(--success); }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 10px; margin-top: auto; }
+    .credits-val { font-weight: bold; font-size: 1rem; color: var(--accent-cyan); }
+
+    /* Buttons & Inputs */
+    button { transition: opacity 0.2s; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .action-btn { background: var(--accent-cyan); color: #000; border: none; padding: 7px 14px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+    .action-btn:hover:not(:disabled) { opacity: 0.9; }
+    .buy-btn { background: var(--accent-gold); color: #000; border: none; padding: 7px 14px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+    .buy-btn:hover:not(:disabled) { opacity: 0.9; }
+    .approve-btn { background: var(--success); color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .reject-btn { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .secondary-btn { background: transparent; border: 1px solid var(--card-border); color: var(--text-muted); padding: 7px 14px; border-radius: 4px; font-size: 0.85rem; cursor: pointer; }
+    .secondary-btn:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); }
+    input, select { width: 100%; padding: 9px 12px; border-radius: 4px; border: 1px solid var(--card-border); background: #080b12; color: #fff; font-size: 0.9rem; }
+
+    /* Admin & Roster */
+    table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--card-border); font-size: 0.85rem; }
+    th { background: #0c121e; color: var(--accent-cyan); }
+    .admin-box { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; padding: 20px; max-width: 600px; margin: 0 auto; }
+    .form-group { margin-bottom: 14px; text-align: left; }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+    .queue-item { display: flex; justify-content: space-between; align-items: center; background: #080b12; border: 1px solid var(--card-border); padding: 12px; border-radius: 6px; margin-bottom: 8px; }
+
+    /* Modals & Loaders */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: var(--card-bg); border: 1px solid var(--accent-cyan); border-radius: 8px; padding: 24px; width: 90%; max-width: 400px; text-align: center; }
+    #loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(11, 15, 25, 0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; color: var(--accent-cyan); font-weight: bold; font-size: 1.2rem; flex-direction: column; gap: 10px; }
+    .spinner { border: 4px solid rgba(0, 240, 255, 0.2); border-top: 4px solid var(--accent-cyan); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <div class="spinner"></div>
+    <div id="loader-text">Establishing connection to Fleet Command...</div>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>Budge Hall | Space Fleet Terminal</h1>
+      <p>Complete missions, earn credits, and unlock floor supplies.</p>
+    </header>
+
+    <div class="user-strip">
+      <div class="user-info">
+        <div>
+          <span style="font-weight: 600;" id="profile-name">Guest Cadet</span>
+          <span style="color: var(--text-muted); font-size: 0.8rem;" id="profile-room"></span>
+        </div>
+        <span class="user-rank" id="profile-rank">[Unregistered]</span>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span class="user-credits" id="profile-credits">0 Credits</span>
+        <button class="action-btn" id="auth-btn">Sign In / Register</button>
+      </div>
+    </div>
+
+    <div class="vault-container">
+      <div class="vault-header">
+        <span>🚀 Communal Vault (Pancake / Waffle Floor Event)</span>
+        <div class="vault-donate-ui">
+          <span id="vault-count" style="margin-right: 12px; color: var(--accent-cyan);">0 / 300 Credits</span>
+          <input type="number" id="donate-amt" min="1" value="1" placeholder="Amt" />
+          <button class="action-btn" style="padding: 6px 12px; background: var(--accent-purple); color: #fff;" onclick="handleDonate()">Contribute</button>
+        </div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-fill" id="vault-fill"></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="bounties">Bounties</button>
+      <button class="tab-btn" data-tab="store">Supply Depot</button>
+      <button class="tab-btn" data-tab="roster">Crew Roster</button>
+      <button class="tab-btn" data-tab="admin">RA Terminal</button>
+    </div>
+
+    <section id="view-bounties" class="view-section active"><div class="grid" id="bounty-grid"></div></section>
+    <section id="view-store" class="view-section"><div class="grid" id="store-grid"></div></section>
+    <section id="view-roster" class="view-section">
+      <table>
+        <thead><tr><th>Cadet / Room</th><th>Rank</th><th>Available Credits</th><th>Lifetime Points</th></tr></thead>
+        <tbody id="roster-table-body"></tbody>
+      </table>
+    </section>
+
+    <section id="view-admin" class="view-section">
+      <div id="ra-login-screen" class="admin-box" style="text-align: center;">
+        <h3 style="color: var(--accent-cyan); margin-bottom: 12px;">🔒 Terminal Locked</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">Authorized RA personnel only.</p>
+        <div class="form-group"><input type="password" id="ra-pin-input" placeholder="Enter PIN" style="text-align: center; letter-spacing: 4px; font-size: 1.2rem;" /></div>
+        <button class="action-btn" id="ra-unlock-btn" style="width: 100%;">Unlock Terminal</button>
+      </div>
+
+      <div id="ra-dashboard" style="display: none;">
+        <div class="admin-box" style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="color: var(--accent-cyan);">📡 Supply Chain Overlook</h3>
+            <button class="secondary-btn" onclick="lockRATerminal()" style="padding: 4px 8px; font-size: 0.75rem;">Lock Console</button>
+          </div>
+          <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--card-border);">
+            <h4 style="color: var(--accent-gold); margin-bottom: 12px;">📦 Pending Store Fulfillment</h4>
+            <div id="pending-orders-container"></div>
+          </div>
+          <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--card-border);">
+            <h4 style="color: var(--text-main); margin-bottom: 12px;">✅ Pending Mission Claims</h4>
+            <div id="pending-claims-container"></div>
+          </div>
+        </div>
+
+        <div class="admin-box">
+          <h4 style="color: var(--text-main); margin-bottom: 12px;">Manual Ledger Adjustments</h4>
+          <div class="form-group"><label>Select Cadet</label><select id="admin-resident-select"></select></div>
+          <div class="form-group">
+            <label>Command Type</label>
+            <select id="admin-action-type">
+              <option value="award">Award Bonus Credits</option>
+              <option value="deduct">Deduct Credits (Manual Adjustment)</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Credit Amount</label><input type="number" id="admin-credits" min="1" value="1" /></div>
+          <button class="action-btn" onclick="handleManualOverride()" style="width: 100%; padding: 10px;">Execute Manual Override</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal-content">
+      <h3 style="color: var(--accent-cyan); margin-bottom: 8px;">Cadet Terminal Access</h3>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">Create a 4-digit PIN for your account so roommates can't spend your credits.</p>
+      <div class="form-group"><label>Room Number</label><input type="text" id="login-room" placeholder="e.g., 204" /></div>
+      <div class="form-group"><label>Your Full Name</label><input type="text" id="login-name" placeholder="Name" /></div>
+      <div class="form-group"><label>Secret PIN (4 Digits)</label><input type="password" id="login-pin" placeholder="****" maxlength="4" /></div>
+      <div style="display: flex; gap: 8px; margin-top: 16px;">
+        <button class="action-btn" style="flex: 1; padding: 10px;" onclick="handleLogin()">Enter Fleet</button>
+        <button class="secondary-btn" onclick="hideModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // YOUR GOOGLE APPS SCRIPT WEB APP URL
+    // ============================================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbzzHjWfpay6hPFzZgopbGlYgazsTH4PiFjxxnfmYUW8AqzWAVPrE9rcD1Cp5KYQmN0xMw/exec";
+    
+    // Core State
+    let state = { residents: [], bounties: [], store: [], claims: [], orders: [], config: {} };
+    let localUserId = localStorage.getItem('budge_cadet_id');
+    let localUserPin = localStorage.getItem('budge_cadet_pin');
+    let sessionRaPin = sessionStorage.getItem('budge_ra_pin');
+
+    // Security
+    function escapeHTML(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+    }
+
+    // UI Helpers
+    function showLoader(msg = "Transmitting data...") { 
+      document.getElementById('loader-text').innerText = msg;
+      document.getElementById('loader').style.display = 'flex'; 
+    }
+    function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+    function hideModal() { document.getElementById('login-modal').style.display = 'none'; }
+    function showModal() { document.getElementById('login-modal').style.display = 'flex'; }
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // API Bridge
+    async function fetchData() {
+      try {
+        const res = await fetch(API_URL);
+        const json = await res.json();
+        if (json.success) {
+          state = json.data;
+          renderView();
+        } else {
+          alert("Database Error: " + json.error);
+        }
+      } catch (err) {
+        alert("Network Error: Could not connect to Fleet Command.");
+      } finally {
+        hideLoader();
+      }
+    }
+
+    async function postData(payload, loadingMsg) {
+      showLoader(loadingMsg);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          await fetchData(); // Refresh state automatically
+          return json;
+        } else {
+          alert("Action Denied: " + json.error);
+          return null;
+        }
+      } catch (err) {
+        alert("Transmission Failed.");
+        return null;
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // Auth Handlers
+    async function handleLogin() {
+      const room = document.getElementById('login-room').value.trim();
+      const name = document.getElementById('login-name').value.trim();
+      const pin = document.getElementById('login-pin').value.trim();
+      
+      if (!room || !name || !pin) return alert("All fields are required.");
+      
+      const res = await postData({ action: 'register', room, name, pin }, "Authenticating...");
+      if (res) {
+        localStorage.setItem('budge_cadet_id', res.data.user.ResidentID);
+        localStorage.setItem('budge_cadet_pin', pin);
+        localUserId = res.data.user.ResidentID;
+        localUserPin = pin;
+        hideModal();
+      }
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('budge_cadet_id');
+      localStorage.removeItem('budge_cadet_pin');
+      localUserId = null;
+      localUserPin = null;
+      renderView();
+    }
+
+    // Action Handlers
+    async function handleClaim(bountyId, bountyTitle) {
+      if (!localUserId) return showModal();
+      await postData({ action: 'claim_bounty', residentId: localUserId, pin: localUserPin, bountyId }, "Filing Mission Log...");
+    }
+
+    async function handlePurchase(itemId, itemName) {
+      if (!localUserId) return showModal();
+      if (!confirm(`Confirm purchase of ${itemName}?`)) return;
+      await postData({ action: 'purchase_item', residentId: localUserId, pin: localUserPin, itemId }, "Processing Requisition...");
+    }
+
+    async function handleDonate() {
+      if (!localUserId) return showModal();
+      const amount = document.getElementById('donate-amt').value;
+      if (!confirm(`Donate ${amount} credits to the Floor Event?`)) return;
+      await postData({ action: 'donate_vault', residentId: localUserId, pin: localUserPin, amount }, "Transferring Credits...");
+    }
+
+    // RA Admin Actions
+    document.getElementById('ra-unlock-btn').addEventListener('click', () => {
+      const pin = document.getElementById('ra-pin-input').value;
+      if (!pin) return;
+      sessionStorage.setItem('budge_ra_pin', pin);
+      sessionRaPin = pin;
+      document.getElementById('ra-pin-input').value = '';
+      renderView();
+    });
+
+    function lockRATerminal() {
+      sessionStorage.removeItem('budge_ra_pin');
+      sessionRaPin = null;
+      renderView();
+    }
+
+    async function raResolveClaim(claimId, approved) {
+      const actionTxt = approved ? "Approve" : "Reject";
+      if (!confirm(`${actionTxt} this claim?`)) return;
+      await postData({ action: 'ra_resolve_claim', raPin: sessionRaPin, claimId, approved }, "Updating Ledger...");
+    }
+
+    async function raResolveOrder(orderId, fulfilled) {
+      const actionTxt = fulfilled ? "Fulfill" : "Refund";
+      if (!confirm(`Mark order as ${actionTxt}?`)) return;
+      await postData({ action: 'ra_resolve_order', raPin: sessionRaPin, orderId, fulfilled }, "Updating Inventory...");
+    }
+
+    async function handleManualOverride() {
+      const residentId = document.getElementById('admin-resident-select').value;
+      const type = document.getElementById('admin-action-type').value;
+      const amount = document.getElementById('admin-credits').value;
+      if (!residentId || !amount) return alert("Select a cadet and amount.");
+      if (!confirm(`Execute manual override?`)) return;
+      
+      await postData({ action: 'ra_manual_override', raPin: sessionRaPin, residentId, type, amount }, "Executing Override...");
+    }
+
+    function getRank(lifetime) {
+      if (lifetime >= 20) return "Fleet Commander";
+      if (lifetime >= 10) return "Flight Lieutenant";
+      if (lifetime >= 5) return "Vanguard Specialist";
+      return "Cadet";
+    }
+
+    // View Renderer
+    function renderView() {
+      const currentUser = state.residents.find(r => r.ResidentID === localUserId);
+      const authBtn = document.getElementById('auth-btn');
+
+      // Profile Bar
+      if (currentUser) {
+        document.getElementById('profile-name').innerText = escapeHTML(currentUser.Name);
+        document.getElementById('profile-room').innerText = ` (Room ${escapeHTML(currentUser.Room)})`;
+        document.getElementById('profile-rank').innerText = `[${getRank(currentUser.Lifetime)}]`;
+        document.getElementById('profile-credits').innerText = `${currentUser.Balance} Credits`;
+        authBtn.innerText = "Log Out"; authBtn.className = "secondary-btn"; authBtn.onclick = logoutUser;
+      } else {
+        document.getElementById('profile-name').innerText = "Guest Cadet";
+        document.getElementById('profile-room').innerText = "";
+        document.getElementById('profile-rank').innerText = "[Unregistered]";
+        document.getElementById('profile-credits').innerText = "0 Credits";
+        authBtn.innerText = "Sign In / Register"; authBtn.className = "action-btn"; authBtn.onclick = showModal;
+      }
+
+      // Vault progress
+      const vaultCurrent = parseInt(state.config.VaultCurrent || 0);
+      const vaultGoal = parseInt(state.config.VaultGoal || 300);
+      document.getElementById('vault-count').innerText = `${vaultCurrent} / ${vaultGoal} Credits`;
+      document.getElementById('vault-fill').style.width = Math.min(100, (vaultCurrent / vaultGoal) * 100) + '%';
+
+      // Completed Bounties Check
+      const completedArr = currentUser && currentUser.CompletedBounties ? currentUser.CompletedBounties.split(',') : [];
+
+      // Bounties Grid
+      const bountyGrid = document.getElementById('bounty-grid');
+      bountyGrid.innerHTML = '';
+      state.bounties.forEach(b => {
+        const isPending = localUserId && state.claims.some(c => c.ResidentID === localUserId && c.BountyID === b.BountyID);
+        const isCompleted = completedArr.includes(b.BountyID);
+        
+        let statusBadge = '';
+        let btnHtml = `<button class="action-btn" onclick="handleClaim('${b.BountyID}', '${escapeHTML(b.Title)}')">Claim Mission</button>`;
+        
+        if (isCompleted) {
+          statusBadge = `<span class="badge badge-success">Completed</span>`;
+          btnHtml = `<button class="secondary-btn" disabled>Mission Cleared</button>`;
+        } else if (isPending) {
+          statusBadge = `<span class="badge badge-pending">Under Review</span>`;
+          btnHtml = `<button class="secondary-btn" disabled>Claim Pending</button>`;
+        }
+
+        bountyGrid.insertAdjacentHTML('beforeend', `
+          <div class="card">
+            <div>
+              <span class="badge ${escapeHTML(b.Tier)}">${escapeHTML(b.Tag)}</span>
+              ${statusBadge}
+              <h3>${escapeHTML(b.Title)}</h3>
+              <p>${escapeHTML(b.Description)}</p>
+            </div>
+            <div class="card-footer">
+              <span class="credits-val">+${b.Reward} Credits</span>
+              ${btnHtml}
+            </div>
+          </div>
+        `);
+      });
+
+      // Store Grid
+      const storeGrid = document.getElementById('store-grid');
+      storeGrid.innerHTML = '';
+      state.store.forEach(s => {
+        const isPerk = String(s.Category).includes('$0');
+        storeGrid.insertAdjacentHTML('beforeend', `
+          <div class="card">
+            <div>
+              <span class="badge ${isPerk ? 'badge-purple' : 'badge-gold'}">${escapeHTML(s.Category)}</span>
+              <h3>${escapeHTML(s.Name)}</h3>
+              <p>${escapeHTML(s.Description)}</p>
+            </div>
+            <div class="card-footer">
+              <span class="credits-val" style="color: var(--accent-gold);">${s.Cost} Credits</span>
+              <button class="buy-btn" onclick="handlePurchase('${s.ItemID}', '${escapeHTML(s.Name)}')">Purchase</button>
+            </div>
+          </div>
+        `);
+      });
+
+      // Roster Table
+      const rosterTbody = document.getElementById('roster-table-body');
+      if (state.residents.length === 0) {
+        rosterTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 24px;">No cadets registered.</td></tr>`;
+      } else {
+        const sortedRoster = [...state.residents].sort((a, b) => parseInt(b.Lifetime) - parseInt(a.Lifetime));
+        rosterTbody.innerHTML = sortedRoster.map(r => `
+          <tr>
+            <td style="font-weight: 600;">${escapeHTML(r.Name)} <span style="color: var(--text-muted); font-size: 0.8rem;">(Rm ${escapeHTML(r.Room)})</span></td>
+            <td><span style="color: var(--accent-cyan); font-weight: 600;">${getRank(r.Lifetime)}</span></td>
+            <td><b style="color: var(--accent-gold);">${r.Balance}</b></td>
+            <td>${r.Lifetime}</td>
+          </tr>
+        `).join('');
+      }
+
+      // RA Admin Dashboard
+      if (sessionRaPin) {
+        document.getElementById('ra-login-screen').style.display = 'none';
+        document.getElementById('ra-dashboard').style.display = 'block';
+
+        // Orders Queue
+        const ordersContainer = document.getElementById('pending-orders-container');
+        if (state.orders.length === 0) ordersContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">No pending store orders.</p>`;
+        else {
+          ordersContainer.innerHTML = state.orders.map(o => `
+            <div class="queue-item">
+              <div><strong style="color: var(--accent-gold);">${escapeHTML(o.ItemName)}</strong><br><span style="font-size: 0.85rem;">${escapeHTML(o.ResidentName)} (Rm ${escapeHTML(o.Room)})</span></div>
+              <div style="display: flex; gap: 6px;">
+                <button class="approve-btn" onclick="raResolveOrder('${o.OrderID}', true)">Fulfill</button>
+                <button class="reject-btn" onclick="raResolveOrder('${o.OrderID}', false)">Refund</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Claims Queue
+        const claimsContainer = document.getElementById('pending-claims-container');
+        if (state.claims.length === 0) claimsContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">No pending claims.</p>`;
+        else {
+          claimsContainer.innerHTML = state.claims.map(c => `
+            <div class="queue-item">
+              <div><strong style="color: var(--accent-cyan);">${escapeHTML(c.BountyTitle)}</strong><br><span style="font-size: 0.85rem;">${escapeHTML(c.ResidentName)} (Rm ${escapeHTML(c.Room)})</span></div>
+              <div style="display: flex; gap: 6px;">
+                <button class="approve-btn" onclick="raResolveClaim('${c.ClaimID}', true)">Approve</button>
+                <button class="reject-btn" onclick="raResolveClaim('${c.ClaimID}', false)">Reject</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Dropdown
+        const select = document.getElementById('admin-resident-select');
+        select.innerHTML = state.residents.length === 0 ? '<option value="">No registered cadets</option>' : state.residents.map(r => `
+          <option value="${r.ResidentID}">Rm ${escapeHTML(r.Room)} - ${escapeHTML(r.Name)} (Bal: ${r.Balance})</option>`).join('');
+      } else {
+        document.getElementById('ra-login-screen').style.display = 'block';
+        document.getElementById('ra-dashboard').style.display = 'none';
+      }
+    }
+
+    // Boot Up
+    fetchData();
+  </script>
+</body>
+</html>
