@@ -362,11 +362,15 @@
       await postData({ action: 'ra_manual_override', raPin: sessionRaPin, residentId, type, amount }, "Executing Override...");
     }
 
-    function getRank(lifetime) {
-      if (lifetime >= 20) return "Fleet Commander";
-      if (lifetime >= 10) return "Flight Lieutenant";
-      if (lifetime >= 5) return "Vanguard Specialist";
-      return "Cadet";
+function getRank(lifetime) {
+      if (lifetime >= 1000) return "Hunter of Hunters";
+      if (lifetime >= 500) return "Galactic Legend";
+      if (lifetime >= 400) return "Mythic Hunter";
+      if (lifetime >= 300) return "Prime Operative";
+      if (lifetime >= 200) return "Void Stalker";
+      if (lifetime >= 100) return "Guild Mercenary";
+      if (lifetime >= 50) return "Outer Rim Tracker";
+      return "Scavenger";
     }
 
     // View Renderer
