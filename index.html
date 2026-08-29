@@ -363,6 +363,7 @@
     }
 
 function getRank(lifetime) {
+      if (lifetime >= 9000) return "Guild Master";
       if (lifetime >= 1000) return "Hunter of Hunters";
       if (lifetime >= 500) return "Galactic Legend";
       if (lifetime >= 400) return "Mythic Hunter";
