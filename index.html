@@ -197,10 +197,9 @@
   <div class="modal-overlay" id="login-modal">
     <div class="modal-content">
       <h3 style="color: var(--accent-cyan); margin-bottom: 8px;">Cadet Terminal Access</h3>
-      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">Create a 4-digit PIN for your account so roommates can't spend your credits.</p>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 16px;">Create an account so roommates can't spend your credits.</p>
       <div class="form-group"><label>Room Number</label><input type="text" id="login-room" placeholder="e.g., 204" /></div>
       <div class="form-group"><label>Your Full Name</label><input type="text" id="login-name" placeholder="Name" /></div>
-      <div class="form-group"><label>Secret PIN (4 Digits)</label><input type="password" id="login-pin" placeholder="****" maxlength="4" /></div>
       <div style="display: flex; gap: 8px; margin-top: 16px;">
         <button class="action-btn" style="flex: 1; padding: 10px;" onclick="handleLogin()">Enter Fleet</button>
         <button class="secondary-btn" onclick="hideModal()">Cancel</button>
@@ -225,7 +224,12 @@
       if (!str) return "";
       return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
     }
-
+    function maskName(fullName) {
+      if (!fullName) return "";
+      const parts = String(fullName).trim().split(/\s+/);
+      if (parts.length === 1) return escapeHTML(parts[0]);
+      return escapeHTML(parts[0] + ' ' + parts[parts[parts.length - 1]].charAt(0) + '.');
+    }
     // UI Helpers
     function showLoader(msg = "Transmitting data...") { 
       document.getElementById('loader-text').innerText = msg;
@@ -289,16 +293,18 @@
     async function handleLogin() {
       const room = document.getElementById('login-room').value.trim();
       const name = document.getElementById('login-name').value.trim();
-      const pin = document.getElementById('login-pin').value.trim();
       
-      if (!room || !name || !pin) return alert("All fields are required.");
+      if (!room || !name) return alert("Room and Name are required.");
       
-      const res = await postData({ action: 'register', room, name, pin }, "Authenticating...");
+      // Use their cleaned-up name as the hidden PIN payload
+      const hiddenPin = name.toLowerCase().replace(/\s+/g, '');
+      
+      const res = await postData({ action: 'register', room, name, pin: hiddenPin }, "Authenticating...");
       if (res) {
         localStorage.setItem('budge_cadet_id', res.data.user.ResidentID);
-        localStorage.setItem('budge_cadet_pin', pin);
+        localStorage.setItem('budge_cadet_pin', hiddenPin);
         localUserId = res.data.user.ResidentID;
-        localUserPin = pin;
+        localUserPin = hiddenPin;
         hideModal();
       }
     }
@@ -476,7 +482,7 @@ function getRank(lifetime) {
         const sortedRoster = [...state.residents].sort((a, b) => parseInt(b.Lifetime) - parseInt(a.Lifetime));
         rosterTbody.innerHTML = sortedRoster.map(r => `
           <tr>
-            <td style="font-weight: 600;">${escapeHTML(r.Name)} <span style="color: var(--text-muted); font-size: 0.8rem;">(Rm ${escapeHTML(r.Room)})</span></td>
+          <td style="font-weight: 600;">${maskName(r.Name)} <span style="color: var(--text-muted); font-size: 0.8rem;">(Rm ${escapeHTML(r.Room)})</span></td>
             <td><span style="color: var(--accent-cyan); font-weight: 600;">${getRank(r.Lifetime)}</span></td>
             <td><b style="color: var(--accent-gold);">${r.Balance}</b></td>
             <td>${r.Lifetime}</td>
