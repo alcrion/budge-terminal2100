@@ -413,8 +413,7 @@ function getRank(lifetime) {
       document.getElementById('vault-fill').style.width = Math.min(100, (vaultCurrent / vaultGoal) * 100) + '%';
 
       // Completed Bounties Check
-      const completedArr = currentUser && currentUser.CompletedBounties ? currentUser.CompletedBounties.split(',') : [];
-
+      const completedArr = currentUser && currentUser.CompletedBounties ? String(currentUser.CompletedBounties).split(',').map(s => s.trim()) : [];
       // Bounties Grid
       const bountyGrid = document.getElementById('bounty-grid');
       bountyGrid.innerHTML = '';
