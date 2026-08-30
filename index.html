@@ -225,11 +225,11 @@
       return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
     }
     function maskName(fullName) {
-      if (!fullName) return "";
-      const parts = String(fullName).trim().split(/\s+/);
-      if (parts.length === 1) return escapeHTML(parts[0]);
-      return escapeHTML(parts[0] + ' ' + parts[parts.length - 1].charAt(0) + '.');
-    }
+  if (!fullName) return "";
+  const parts = String(fullName).trim().split(/\s+/);
+  if (parts.length === 1) return escapeHTML(parts[0]);
+  return escapeHTML(parts[0] + ' ' + parts[parts.length - 1].charAt(0) + '.');
+}
     // UI Helpers
     function showLoader(msg = "Transmitting data...") { 
       document.getElementById('loader-text').innerText = msg;
@@ -318,8 +318,11 @@
     }
 
     // Action Handlers
-   async function handleClaim(bountyId, bountyTitle) {
+  async function handleClaim(bountyId) {
       if (!localUserId) return showModal();
+  
+      const bounty = state.bounties.find(b => String(b.BountyID) === String(bountyId));
+      const bountyTitle = bounty ? bounty.Title : "Unknown Mission";
       
       const res = await postData({ action: 'claim_bounty', residentId: localUserId, pin: localUserPin, bountyId }, "Filing Mission Log...");
       
@@ -329,11 +332,16 @@
       }
     }
 
-    async function handlePurchase(itemId, itemName) {
-      if (!localUserId) return showModal();
-      if (!confirm(`Confirm purchase of ${itemName}?`)) return;
-      await postData({ action: 'purchase_item', residentId: localUserId, pin: localUserPin, itemId }, "Processing Requisition...");
-    }
+    async function handlePurchase(itemId) {
+  if (!localUserId) return showModal();
+  
+  // Look up the item name safely in JavaScript
+  const item = state.store.find(i => String(i.ItemID) === String(itemId));
+  const itemName = item ? (item.Name || item.Title) : "this item";
+
+  if (!confirm(`Confirm purchase of ${itemName}?`)) return;
+  await postData({ action: 'purchase_item', residentId: localUserId, pin: localUserPin, itemId }, "Processing Requisition...");
+}
 
     async function handleDonate() {
       if (!localUserId) return showModal();
@@ -394,7 +402,7 @@ function getRank(lifetime) {
 
     // View Renderer
     function renderView() {
-      const currentUser = state.residents.find(r => r.ResidentID === localUserId);
+      const currentUser = state.residents.find(r => String(r.ResidentID) === String(localUserId));
       const authBtn = document.getElementById('auth-btn');
 
       // Profile Bar
@@ -425,10 +433,10 @@ function getRank(lifetime) {
       bountyGrid.innerHTML = '';
       state.bounties.forEach(b => {
         const isPending = localUserId && state.claims.some(c => c.ResidentID === localUserId && c.BountyID === b.BountyID);
-        const isCompleted = completedArr.includes(b.BountyID);
+        const isCompleted = completedArr.includes(String(b.BountyID));
         
         let statusBadge = '';
-        let btnHtml = `<button class="action-btn" onclick="handleClaim('${b.BountyID}', '${escapeHTML(b.Title)}')">Claim Mission</button>`;
+        let btnHtml = `<button class="action-btn" onclick="handleClaim('${b.BountyID}')">Claim Mission</button>`;
         
         if (isCompleted) {
           statusBadge = `<span class="badge badge-success">Completed</span>`;
@@ -468,7 +476,7 @@ function getRank(lifetime) {
             </div>
             <div class="card-footer">
               <span class="credits-val" style="color: var(--accent-gold);">${s.Cost} Credits</span>
-              <button class="buy-btn" onclick="handlePurchase('${s.ItemID}', '${escapeHTML(s.Name)}')">Purchase</button>
+              <button class="buy-btn" onclick="handlePurchase('${s.ItemID}')">Purchase</button>
             </div>
           </div>
         `);
