@@ -228,7 +228,7 @@
       if (!fullName) return "";
       const parts = String(fullName).trim().split(/\s+/);
       if (parts.length === 1) return escapeHTML(parts[0]);
-      return escapeHTML(parts[0] + ' ' + parts[parts[parts.length - 1]].charAt(0) + '.');
+      return escapeHTML(parts[0] + ' ' + parts[parts.length - 1].charAt(0) + '.');
     }
     // UI Helpers
     function showLoader(msg = "Transmitting data...") { 
