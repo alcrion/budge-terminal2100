@@ -438,13 +438,11 @@ function getRank(lifetime) {
         let statusBadge = '';
         let btnHtml = `<button class="action-btn" onclick="handleClaim('${b.BountyID}')">Claim Mission</button>`;
         
-        if (isCompleted) {
-          statusBadge = `<span class="badge badge-success">Completed</span>`;
-          btnHtml = `<button class="secondary-btn" disabled>Mission Cleared</button>`;
-        } else if (isPending) {
+        if (isPending) {
           statusBadge = `<span class="badge badge-pending">Under Review</span>`;
           btnHtml = `<button class="secondary-btn" disabled>Claim Pending</button>`;
-        }
+        } 
+        // We removed the 'isCompleted' check so the button stays active!
 
         bountyGrid.insertAdjacentHTML('beforeend', `
           <div class="card">
